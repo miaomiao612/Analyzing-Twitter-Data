@@ -1,0 +1,133 @@
+---
+title: "Analyzing Twitter Data"
+author: "Yifei Sun"
+date: '2022-12-18'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = "C:\\Users\\yifeisun\\Downloads")
+```
+
+```{r}
+options(scipen=999)
+
+library(rtweet)
+library(tidyverse)
+library(dplyr)
+auth_setup_default()
+rate_limit()
+```
+
+```{r}
+Scooter <- search_tweets("#scooter", n = 10000, retryonratelimit = TRUE, include_rts = FALSE)
+colnames(Scooter)
+head(Scooter$text, n=10)
+
+
+```
+
+```{r}
+stream_chicago <- tempfile(fileext = ".json")
+stream_chicago <- stream_tweets(lookup_coords("san francisco"), timeout = 15, 
+                               file_name=stream_chicago)
+glimpse(stream_chicago)
+library(jsonlite)
+write_json(stream_chicago, "C:/Users/yifeisun/Downloads/tweets.json")
+```
+
+```{r}
+library(leaflet)
+
+
+# Create a leaflet map object
+map <- leaflet()
+
+# Add markers to the map using the JSON data
+for(i in 1:nrow(stream_chicago))
+  {
+   
+       dataf[i]=glimpse(stream_chicago$place[[i]]$place$bounding_box)
+
+  }
+
+
+plot <- ggplot(stream_chicago, aes(x = x, y = y)) +
+  geom_polygon(aes(fill = value, group = id))
+```
+
+```{r}
+for(i in 1:nrow(stream_chicago))
+  {
+stream_chicago$place[[i]]$place$bounding_box
+  }
+
+for(i in 1:nrow(stream_chicago))
+  {
+
+    mutate (long[i] = place[[i]]$place$name)
+  
+}
+stream_chicago$place[[6]]$coordinates
+stream_chicago$place[[6]]$place$bounding_box
+```
+
+```{r}
+#install.packages(c("tm","RTextTools","SnowballC"))
+
+library(tm)
+library(RTextTools)
+library(SnowballC)
+
+```
+
+```{r}
+Scooter_Text <- data.frame(text = Scooter$text)
+myCorpus <- Corpus(VectorSource(Scooter_Text$text))
+#     Defining the toSpace function
+toSpace <- content_transformer(function(x, pattern) gsub(pattern, " ", x))
+#     Removing special characters
+myCorpus <- tm_map(myCorpus, toSpace, "@")
+myCorpus <- tm_map(myCorpus, toSpace, "/")
+myCorpus <- tm_map(myCorpus, toSpace, "]")
+myCorpus <- tm_map(myCorpus, toSpace, "$")
+
+myCorpus <- tm_map(myCorpus, function(x) iconv(x, "latin1", "ASCII", sub=""))
+
+myCorpus <- tm_map(myCorpus, removeNumbers)
+
+myCorpus <- tm_map(myCorpus, removePunctuation)
+
+stopwords("english")
+
+myCorpus <- tm_map(myCorpus, removeWords, stopwords("english"))
+
+myCorpus <- tm_map(myCorpus, removeWords,c("Scooter","scooter","By", "The", "http", "may", "ttp","qhb...", "https", "http...", "for", "tco"))
+
+myCorpus <- tm_map(myCorpus, stripWhitespace)
+
+myCorpus <- tm_map(myCorpus, stemDocument)
+```
+
+Text mining
+
+```{r}
+dtm <- DocumentTermMatrix(myCorpus)
+dim(dtm)
+freq <- sort(colSums(as.matrix(dtm)), decreasing=TRUE)
+library(wordcloud)
+
+wordcloud(names(freq), freq, min.freq=30, colors=brewer.pal(6, "Dark2"))
+
+```
+
+
+```{r}
+
+```
