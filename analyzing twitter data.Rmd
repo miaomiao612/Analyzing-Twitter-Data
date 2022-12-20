@@ -35,9 +35,8 @@ head(Scooter$text, n=10)
 
 ```{r}
 stream_chicago <- tempfile(fileext = ".json")
-stream_chicago <- stream_tweets(lookup_coords("san francisco"), timeout = 15, 
+stream_chicago <- stream_tweets(lookup_coords("chicago"), timeout = 1000, 
                                file_name=stream_chicago)
-glimpse(stream_chicago)
 library(jsonlite)
 write_json(stream_chicago, "C:/Users/yifeisun/Downloads/tweets.json")
 ```
